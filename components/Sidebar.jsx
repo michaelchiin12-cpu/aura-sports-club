@@ -10,7 +10,11 @@ const MENU = [
   { href: "/dashboard/kas", label: "Kas Aura" },
   { href: "/dashboard/skor", label: "Skor Live" },
   { href: "/dashboard/bagan", label: "Bagan Pertandingan" },
-  { href: "/dashboard/dokumentasi", label: "Dokumentasi" },
+  {
+    href: "https://drive.google.com/drive/folders/12R84sPYJwuOegQnl3wZU1TRnxBDXWFFn?usp=sharing",
+    label: "Dokumentasi",
+    external: true,
+  },
 ];
 
 export default function Sidebar({ email }) {
@@ -41,22 +45,25 @@ export default function Sidebar({ email }) {
       <div className="lane-divider" />
 
       <nav className="flex flex-wrap md:flex-col gap-2 p-4 md:p-6 flex-1">
-        {MENU.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <a
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm whitespace-nowrap transition-colors ${
-                active
-                  ? "bg-aura/15 text-paper font-medium border border-aura/30"
-                  : "text-mist hover:text-paper border border-transparent"
-              }`}
-            >
-              {item.label}
-            </a>
-          );
-        })}
+{MENU.map((item) => {
+  const active = pathname === item.href;
+
+  return (
+    <a
+      key={item.href}
+      href={item.href}
+      target={item.external ? "_blank" : undefined}
+      rel={item.external ? "noopener noreferrer" : undefined}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm whitespace-nowrap transition-colors ${
+        active
+          ? "bg-aura/15 text-paper font-medium border border-aura/30"
+          : "text-mist hover:text-paper border border-transparent"
+      }`}
+    >
+      {item.label}
+    </a>
+  );
+})}
       </nav>
 
       <div className="lane-divider" />
