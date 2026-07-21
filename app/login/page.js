@@ -48,7 +48,7 @@ export default function LoginPage() {
             AURA SPORTS CLUB
           </h1>
           <p className="text-mist text-sm mt-2">
-            Masuk untuk melihat jadwal latihan dan aktivitas klub Anda.
+            Masuk untuk lihat jadwal dan aktivitas klub Aura.
           </p>
         </div>
 
@@ -98,8 +98,8 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-mist text-xs mt-6">
-          Akun member dibuat oleh admin. Hubungi pengurus klub bila belum
-          memiliki akses.
+          Akun member dibuat oleh admin. Hubungi pengurus klub jika belum
+          memiliki akses - Michael .
         </p>
       </div>
     </main>
