@@ -1,5 +1,4 @@
-# 🦝 RakunKecil HQ — Smart Badminton Match Scheduler
-
+AURA SPORTS CLUB
 Single-file web app buat ngatur sesi main badminton: pemain, jadwal otomatis
 (weighted fairness algorithm, bukan random), input skor, leaderboard, TV mode,
 dan analitik. Semua jalan di browser, gak butuh server/backend — data
