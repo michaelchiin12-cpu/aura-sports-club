@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aura Sports Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#0B1220; --ink-soft:#121B2E; --ink-line:#1E293B;
+    --aura:#6D5EF5; --aura-soft:#8B7FFF; --pulse:#FF6B4A;
+    --mist:#A8B0C3; --paper:#F5F6FA; --go:#34D399; --warn:#FBBF24;
+    --f-display:'Space Grotesk',sans-serif; --f-body:'Inter',sans-serif; --f-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--ink);color:var(--paper);font-family:var(--f-body);}
+  body{min-height:100vh;}
+  h1,h2,h3,.font-display{font-family:var(--f-display);}
+  .mono{font-family:var(--f-mono);}
+  a{color:inherit;text-decoration:none;}
+  input,select,button,textarea{font-family:var(--f-body);}
+  ::selection{background:var(--aura);color:#fff;}
+  .lane{background-image:repeating-linear-gradient(90deg, rgba(168,176,195,.35) 0 10px, transparent 10px 20px); height:1px; border:none;}
+  .glow{background:radial-gradient(circle at 15% 10%, rgba(109,94,245,.30), transparent 55%), radial-gradient(circle at 85% 0%, rgba(255,107,74,.15), transparent 45%);}
+  .ring{box-shadow:0 0 0 1px rgba(109,94,245,.4), 0 0 24px 0 rgba(109,94,245,.22);}
+  ::-webkit-scrollbar{width:8px;height:8px;} ::-webkit-scrollbar-thumb{background:var(--ink-line);border-radius:999px;}
+
+  /* ---------- Login ---------- */
+  #login-screen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(109,94,245,.35), transparent 50%),
+      radial-gradient(circle at 85% 85%, rgba(255,107,74,.25), transparent 50%),
+      linear-gradient(180deg, #070B14 0%, #0B1220 100%);
+  }
+  #login-screen::before{
+    content:"";position:absolute;inset:0;opacity:.5;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 64px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 64px);
+  }
+  .login-box{position:relative;width:100%;max-width:400px;}
+  .login-card{background:rgba(18,27,46,.85);backdrop-filter:blur(6px);border:1px solid var(--ink-line);border-radius:20px;overflow:hidden;}
+  .login-hero{padding:34px 30px 24px;text-align:center;background:linear-gradient(180deg, rgba(109,94,245,.18), transparent);}
+  .login-logo{width:78px;height:78px;border-radius:999px;margin:0 auto 18px;border:2px solid rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;background:rgba(11,18,32,.6);}
+  .login-logo svg{width:38px;height:38px;}
+  .login-title{font-size:24px;font-weight:700;letter-spacing:-.01em;margin:0 0 6px;}
+  .login-sub{font-size:11px;letter-spacing:.35em;color:var(--aura-soft);text-transform:uppercase;font-family:var(--f-mono);margin:0;}
+  .login-body{padding:26px 30px 32px;}
+  .login-desc{text-align:center;color:var(--mist);font-size:14px;line-height:1.6;margin:0 0 24px;}
+  .btn-google{
+    width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+    background:#fff;color:#1f2937;font-weight:600;border:none;border-radius:12px;
+    padding:13px;cursor:pointer;font-size:15px;transition:transform .1s, box-shadow .15s;
+  }
+  .btn-google:hover{box-shadow:0 0 0 3px rgba(255,255,255,.15);}
+  .btn-google:active{transform:scale(.98);}
+  .login-note{text-align:center;color:var(--mist);font-size:12px;margin-top:18px;line-height:1.5;}
+  .login-error{color:var(--pulse);font-size:13px;text-align:center;margin-top:14px;}
+
+  /* ---------- Shell ---------- */
+  #shell{display:none;min-height:100vh;}
+  #shell.active{display:flex;flex-direction:column;}
+  @media(min-width:768px){ #shell.active{flex-direction:row;} }
+
+  #sidebar{width:100%;flex-shrink:0;background:var(--ink-soft);border-right:1px solid var(--ink-line);display:flex;flex-direction:column;}
+  @media(min-width:768px){ #sidebar{width:260px;min-height:100vh;} }
+
+  .brand{padding:20px;}
+  .brand h1{font-size:19px;font-weight:600;letter-spacing:-.02em;margin:2px 0 0;}
+  .eyebrow{font-size:11px;letter-spacing:.3em;color:var(--mist);text-transform:uppercase;font-family:var(--f-mono);}
+  .dot-pulse{width:10px;height:10px;border-radius:999px;background:var(--pulse);display:inline-block;}
+
+  #nav{display:flex;flex-wrap:wrap;gap:8px;padding:16px;flex:1;}
+  @media(min-width:768px){ #nav{flex-direction:column;flex-wrap:nowrap;padding:24px;} }
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:14px;color:var(--mist);border:1px solid transparent;cursor:pointer;white-space:nowrap;background:none;}
+  .nav-item:hover{color:var(--paper);}
+  .nav-item.active{background:rgba(109,94,245,.15);color:var(--paper);font-weight:500;border-color:rgba(109,94,245,.3);}
+
+  .side-foot{padding:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  @media(min-width:768px){ .side-foot{flex-direction:column;align-items:flex-start;} }
+  .who-wrap{display:flex;align-items:center;gap:8px;min-width:0;}
+  .who-avatar{width:26px;height:26px;border-radius:999px;flex-shrink:0;object-fit:cover;background:var(--ink-line);}
+  .who-name{font-size:12px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
+  .logout-btn{background:none;border:none;color:var(--mist);cursor:pointer;font-size:13px;}
+  .logout-btn:hover{color:var(--pulse);}
+
+  #content{flex:1;padding:22px;}
+  @media(min-width:768px){ #content{padding:40px;} }
+
+  .page-title{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:4px 0 24px;}
+  @media(min-width:768px){ .page-title{font-size:30px;} }
+
+  .grid{display:grid;gap:16px;grid-template-columns:1fr;}
+  @media(min-width:640px){ .grid-2{grid-template-columns:1fr 1fr;} }
+  @media(min-width:1024px){ .grid-3{grid-template-columns:1fr 1fr 1fr;} }
+
+  .card{background:var(--ink-soft);border:1px solid var(--ink-line);border-radius:16px;}
+  .form-card{padding:22px;margin-bottom:28px;}
+  .form-row{display:grid;gap:14px;grid-template-columns:1fr;align-items:end;}
+  @media(min-width:768px){ .form-row{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));} }
+
+  .field-label{display:block;font-size:11px;color:var(--mist);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+  .field-input{width:100%;background:var(--ink);border:1px solid var(--ink-line);border-radius:8px;padding:10px 14px;color:var(--paper);outline:none;font-size:14px;}
+  .field-input:focus{border-color:var(--aura);}
+  .btn-primary{background:var(--aura);color:#fff;font-weight:600;border:none;border-radius:8px;padding:10px 22px;cursor:pointer;font-size:14px;}
+  .btn-primary:hover{background:var(--aura-soft);}
+  .btn-primary:disabled{opacity:.5;cursor:default;}
+
+  .list-card .list-head{padding:14px 20px;border-bottom:1px solid var(--ink-line);font-family:var(--f-display);font-weight:600;}
+  .list-row{padding:13px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--ink-line);}
+  .list-row:last-child{border-bottom:none;}
+  .row-title{font-weight:500;font-size:14px;}
+  .row-sub{font-size:12px;color:var(--mist);margin-top:2px;font-family:var(--f-mono);}
+
+  .badge{font-size:10px;font-family:var(--f-mono);text-transform:uppercase;padding:4px 9px;border-radius:999px;border:1px solid;white-space:nowrap;}
+  .badge-go{background:rgba(52,211,153,.15);color:var(--go);border-color:rgba(52,211,153,.3);}
+  .badge-warn{background:rgba(251,191,36,.15);color:var(--warn);border-color:rgba(251,191,36,.3);}
+  .badge-pulse{background:rgba(255,107,74,.15);color:var(--pulse);border-color:rgba(255,107,74,.3);}
+  .badge-mist{background:rgba(168,176,195,.1);color:var(--mist);border-color:rgba(168,176,195,.2);}
+  .badge-btn{cursor:pointer;}
+
+  .empty{padding:30px;text-align:center;color:var(--mist);font-size:14px;}
+
+  .stat-card{padding:18px;}
+  .stat-label{font-size:11px;color:var(--mist);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;}
+  .stat-value{font-family:var(--f-mono);font-size:22px;font-weight:600;}
+
+  .score-card{padding:18px;}
+  .score-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .score-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .score-input{width:60px;text-align:center;background:var(--ink);border:1px solid var(--ink-line);border-radius:8px;padding:7px 0;font-family:var(--f-mono);font-size:18px;color:var(--aura-soft);font-weight:600;}
+  .status-btns{display:flex;gap:6px;}
+  .status-btn{flex:1;font-size:11px;padding:7px 4px;border-radius:8px;border:1px solid var(--ink-line);color:var(--mist);background:none;cursor:pointer;}
+  .status-btn.active{background:rgba(109,94,245,.15);border-color:rgba(109,94,245,.4);color:var(--paper);}
+
+  .doc-card{padding:14px 16px;display:block;}
+  .doc-card:hover{border-color:rgba(109,94,245,.4);}
+  .doc-url{color:var(--aura-soft);font-size:12px;font-family:var(--f-mono);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+  .bagan-wrap{overflow-x:auto;padding-bottom:12px;}
+  .bagan-round{display:flex;flex-direction:column;width:220px;flex-shrink:0;}
+  .bagan-round-title{font-size:11px;color:var(--mist);text-transform:uppercase;letter-spacing:.05em;font-family:var(--f-mono);text-align:center;margin-bottom:14px;}
+  .bagan-match{background:var(--ink-soft);border:1px solid var(--ink-line);border-radius:10px;overflow:hidden;}
+  .bagan-team{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:14px;}
+  .bagan-win{color:var(--go);font-weight:600;}
+
+  .live-dot{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:var(--f-mono);text-transform:uppercase;color:var(--go);}
+  .live-dot .d{width:6px;height:6px;border-radius:999px;background:var(--go);animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  .loading-line{color:var(--mist);font-size:14px;padding:20px 0;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-card ring">
+      <div class="login-hero">
+        <div class="login-logo">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="#8B7FFF" stroke-width="1.6"/>
+            <path d="M12 2v20M2 12h20" stroke="#8B7FFF" stroke-width="1.2" opacity=".5"/>
+            <circle cx="12" cy="12" r="4" fill="#6D5EF5"/>
+          </svg>
+        </div>
+        <h1 class="login-title font-display">Aura Sports Club</h1>
+        <p class="login-sub">Member Access</p>
+      </div>
+      <div class="login-body">
+        <p class="login-desc">Login dengan akun Google untuk mengakses dashboard.<br>Identitas kamu terverifikasi lewat Google.</p>
+        <button class="btn-google" id="google-btn">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.3 2.7l6-6C34 6.5 29.3 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.4-.3-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c2.8 0 5.3 1 7.3 2.7l6-6C34 6.5 29.3 4.5 24 4.5c-7.6 0-14.1 4.3-17.4 10.6.4-.1.5-.3.7-.4z"/><path fill="#4CAF50" d="M24 43.5c5.2 0 9.9-1.8 13.5-4.9l-6.2-5.3C29.3 34.9 26.8 35.8 24 35.8c-5.2 0-9.6-3.5-11.2-8.2l-6.5 5C9.9 39 16.4 43.5 24 43.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.4l6.2 5.3C40.6 36 43.5 30.5 43.5 24c0-1.2-.1-2.4-.3-3.5z"/></svg>
+          Masuk dengan Google
+        </button>
+        <div class="login-error" id="login-error" style="display:none;"></div>
+        <p class="login-note">Data absensi, jadwal, dan aktivitas klub tersimpan aman di server, sinkron di semua perangkat kamu.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="shell">
+  <aside id="sidebar">
+    <div class="brand">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:1px;"><span class="dot-pulse"></span><span class="eyebrow">Member Access</span></div>
+      <h1 class="font-display">AURA SPORTS CLUB</h1>
+    </div>
+    <div class="lane"></div>
+    <nav id="nav"></nav>
+    <div class="lane"></div>
+    <div class="side-foot">
+      <div class="who-wrap">
+        <img class="who-avatar" id="who-avatar" src="" alt="">
+        <span class="who-name" id="who-label"></span>
+      </div>
+      <button class="logout-btn" id="logout-btn">Keluar</button>
+    </div>
+  </aside>
+  <main id="content"><p class="loading-line">Memuat...</p></main>
+</div>
+
+<script>
+/* =========================================================
+   AURA SPORTS CLUB — single file, login Google via Supabase
+   Ganti 2 nilai ini sesuai project Supabase Anda:
+========================================================= */
+const SUPABASE_URL = "https://cixxczinydgblrrrdohw.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeHhjemlueWRnYmxycnJkb2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzNjkwNzMsImV4cCI6MjA5OTk0NTA3M30.fAdoc0f2YHwYGXSoIlkGhPxVMjzhnEe6BcRAD5YzXXo";
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ---------- helpers ---------- */
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+function rupiah(n){ return "Rp" + Number(n||0).toLocaleString("id-ID"); }
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+let currentUserObj = null;
+
+/* ---------- auth ---------- */
+$("#google-btn").addEventListener("click", async ()=>{
+  $("#login-error").style.display = "none";
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.href.split("#")[0] }
+  });
+  if(error){
+    $("#login-error").textContent = "Gagal login: " + error.message;
+    $("#login-error").style.display = "block";
+  }
+});
+
+$("#logout-btn").addEventListener("click", async ()=>{
+  await sb.auth.signOut();
+});
+
+sb.auth.onAuthStateChange((_event, session)=>{
+  currentUserObj = session ? session.user : null;
+  boot();
+});
+
+function boot(){
+  if(currentUserObj){
+    $("#login-screen").style.display = "none";
+    $("#shell").classList.add("active");
+    const meta = currentUserObj.user_metadata || {};
+    $("#who-label").textContent = meta.full_name || meta.name || currentUserObj.email || "Member";
+    $("#who-avatar").src = meta.avatar_url || meta.picture || "";
+    renderNav();
+    renderContent();
+  } else {
+    $("#login-screen").style.display = "flex";
+    $("#shell").classList.remove("active");
+  }
+}
+
+function displayName(){
+  if(!currentUserObj) return "";
+  const meta = currentUserObj.user_metadata || {};
+  return meta.full_name || meta.name || currentUserObj.email || "Member";
+}
+
+/* ---------- nav / tabs ---------- */
+const TABS = [
+  {id:"jadwal", label:"Jadwal Latihan"},
+  {id:"absensi", label:"Absensi"},
+  {id:"pembayaran", label:"Pembayaran"},
+  {id:"kas", label:"Kas Aura"},
+  {id:"skor", label:"Skor Live"},
+  {id:"bagan", label:"Bagan Pertandingan"},
+  {id:"dokumentasi", label:"Dokumentasi"},
+];
+let currentTab = "jadwal";
+let skorChannel = null;
+
+function renderNav(){
+  $("#nav").innerHTML = TABS.map(t => `
+    <button class="nav-item ${t.id===currentTab?'active':''}" data-tab="${t.id}">${t.label}</button>
+  `).join("");
+  $$("#nav .nav-item").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ currentTab = btn.dataset.tab; renderNav(); renderContent(); });
+  });
+}
+
+function renderContent(){
+  if(skorChannel){ sb.removeChannel(skorChannel); skorChannel = null; }
+  const map = { jadwal:renderJadwal, absensi:renderAbsensi, pembayaran:renderPembayaran, kas:renderKas, skor:renderSkor, bagan:renderBagan, dokumentasi:renderDokumentasi };
+  map[currentTab]();
+}
+
+/* =========================================================
+   TAB: JADWAL LATIHAN
+========================================================= */
+const HARI_URUT = ["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"];
+const STATUS_JADWAL_BADGE = {Buka:"badge-go", Penuh:"badge-warn", Libur:"badge-mist"};
+
+async function renderJadwal(){
+  $("#content").innerHTML = `<p class="loading-line">Memuat jadwal...</p>`;
+  const { data, error } = await sb.from("jadwal_latihan").select("*").order("hari");
+  if(error){ $("#content").innerHTML = `<div class="card empty">Gagal memuat jadwal: ${esc(error.message)}</div>`; return; }
+
+  const grup = HARI_URUT.map(h => ({hari:h, kelas:(data||[]).filter(d=>d.hari===h)})).filter(g=>g.kelas.length>0);
+
+  $("#content").innerHTML = `
+    <span class="eyebrow">Minggu Ini</span>
+    <h2 class="page-title font-display">Jadwal Latihan &amp; Kelas</h2>
+
+    <div class="card form-card">
+      <div class="form-row" style="margin-bottom:14px;">
+        <div><label class="field-label">Hari</label>
+          <select class="field-input" id="j-hari">${HARI_URUT.map(h=>`<option>${h}</option>`).join("")}</select></div>
+        <div><label class="field-label">Nama Kelas</label>
+          <input class="field-input" id="j-kelas" placeholder="Latihan Fisik"></div>
+        <div><label class="field-label">Pelatih</label>
+          <input class="field-input" id="j-pelatih" placeholder="Coach ..."></div>
+        <div><label class="field-label">Jam Mulai</label>
+          <input class="field-input" id="j-mulai" type="time" value="06:00"></div>
+        <div><label class="field-label">Jam Selesai</label>
+          <input class="field-input" id="j-selesai" type="time" value="07:00"></div>
+        <div><label class="field-label">Status</label>
+          <select class="field-input" id="j-status"><option>Buka</option><option>Penuh</option><option>Libur</option></select></div>
+      </div>
+      <button class="btn-primary" id="j-add">Tambah Jadwal</button>
+    </div>
+
+    <div class="grid grid-3">
+      ${grup.map(g => `
+        <div class="card list-card">
+          <div class="list-head" style="display:flex;justify-content:space-between;">
+            <span>${g.hari}</span><span class="mono" style="color:var(--mist);font-weight:400;font-size:12px;">${g.kelas.length} kelas</span>
+          </div>
+          <div class="lane"></div>
+          ${g.kelas.map(k => `
+            <div class="list-row">
+              <div>
+                <div class="row-title">${esc(k.nama_kelas)}</div>
+                <div class="row-sub">Pelatih: ${esc(k.pelatih)||'-'}</div>
+                <div class="row-sub" style="color:var(--aura-soft);">${(k.jam_mulai||"").slice(0,5)} – ${(k.jam_selesai||"").slice(0,5)}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                <span class="badge ${STATUS_JADWAL_BADGE[k.status]||'badge-mist'}">${k.status}</span>
+                <button class="badge badge-pulse badge-btn" data-del="${k.id}">Hapus</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `).join("") || `<div class="card empty">Belum ada jadwal. Tambahkan lewat form di atas.</div>`}
+    </div>
+  `;
+
+  $("#j-add").addEventListener("click", async ()=>{
+    const nama_kelas = $("#j-kelas").value.trim();
+    if(!nama_kelas) return;
+    await sb.from("jadwal_latihan").insert({
+      hari: $("#j-hari").value, nama_kelas, pelatih: $("#j-pelatih").value.trim(),
+      jam_mulai: $("#j-mulai").value, jam_selesai: $("#j-selesai").value, status: $("#j-status").value
+    });
+    renderJadwal();
+  });
+  $$("[data-del]").forEach(b=>b.addEventListener("click", async ()=>{
+    await sb.from("jadwal_latihan").delete().eq("id", b.dataset.del);
+    renderJadwal();
+  }));
+}
+
+/* =========================================================
+   TAB: ABSENSI
+========================================================= */
+const STATUS_ABSEN_BADGE = {Hadir:"badge-go", Izin:"badge-warn", Alpa:"badge-pulse"};
+
+async function renderAbsensi(){
+  $("#content").innerHTML = `<p class="loading-line">Memuat...</p>`;
+  const [{ data: jadwal }, { data: absensi, error }] = await Promise.all([
+    sb.from("jadwal_latihan").select("id, hari, nama_kelas").order("hari"),
+    sb.from("absensi").select("*, jadwal_latihan(nama_kelas)").order("tanggal", { ascending:false }).limit(40)
+  ]);
+  if(error){ $("#content").innerHTML = `<div class="card empty">Gagal memuat absensi: ${esc(error.message)}</div>`; return; }
+
+  $("#content").innerHTML = `
+    <span class="eyebrow">Kehadiran</span>
+    <h2 class="page-title font-display">Absensi Latihan</h2>
+
+    <div class="card form-card">
+      <div class="form-row" style="margin-bottom:14px;">
+        <div><label class="field-label">Nama Anggota</label>
+          <input class="field-input" id="a-nama" placeholder="Nama" value="${esc(displayName())}"></div>
+        <div><label class="field-label">Kelas</label>
+          <select class="field-input" id="a-kelas">
+            <option value="">Pilih</option>
+            ${(jadwal||[]).map(j=>`<option value="${j.id}">${j.hari} — ${esc(j.nama_kelas)}</option>`).join("")}
+          </select></div>
+        <div><label class="field-label">Tanggal</label>
+          <input class="field-input" id="a-tanggal" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div><label class="field-label">Status</label>
+          <select class="field-input" id="a-status"><option>Hadir</option><option>Izin</option><option>Alpa</option></select></div>
+      </div>
+      <button class="btn-primary" id="a-add">Catat</button>
+    </div>
+
+    <div class="card list-card">
+      <div class="list-head">Riwayat Terbaru</div>
+      <div class="lane"></div>
+      ${(absensi||[]).map(r=>`
+        <div class="list-row">
+          <div><div class="row-title">${esc(r.nama_anggota)}</div><div class="row-sub">${r.tanggal} · ${r.jadwal_latihan?esc(r.jadwal_latihan.nama_kelas):'-'}</div></div>
+          <span class="badge ${STATUS_ABSEN_BADGE[r.status]||'badge-mist'}">${r.status}</span>
+        </div>
+      `).join("") || `<div class="empty">Belum ada data absensi.</div>`}
+    </div>
+  `;
+
+  $("#a-add").addEventListener("click", async ()=>{
+    const nama_anggota = $("#a-nama").value.trim();
+    if(!nama_anggota || !$("#a-kelas").value) return;
+    await sb.from("absensi").insert({
+      nama_anggota, jadwal_id: $("#a-kelas").value, tanggal: $("#a-tanggal").value, status: $("#a-status").value
+    });
+    renderAbsensi();
+  });
+}
+
+/* =========================================================
+   TAB: PEMBAYARAN
+========================================================= */
+async function renderPembayaran(){
+  $("#content").innerHTML = `<p class="loading-line">Memuat...</p>`;
+  const { data, error } = await sb.from("pembayaran").select("*").order("periode", { ascending:false });
+  if(error){ $("#content").innerHTML = `<div class="card empty">Gagal memuat pembayaran: ${esc(error.message)}</div>`; return; }
+  const list = data || [];
+  const lunas = list.filter(d=>d.status==="Lunas").length;
+
+  $("#content").innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
+      <div><span class="eyebrow">Iuran Member</span><h2 class="page-title font-display" style="margin-bottom:6px;">Update Pembayaran</h2></div>
+      <div class="mono" style="color:var(--mist);font-size:14px;margin-bottom:20px;"><span style="color:var(--go);font-weight:600;">${lunas}</span> / ${list.length} lunas</div>
+    </div>
+
+    <div class="card form-card">
+      <div class="form-row" style="margin-bottom:14px;">
+        <div><label class="field-label">Nama Anggota</label>
+          <input class="field-input" id="p-nama" placeholder="Nama" value="${esc(displayName())}"></div>
+        <div><label class="field-label">Periode</label>
+          <input class="field-input" id="p-periode" type="month" value="${new Date().toISOString().slice(0,7)}"></div>
+        <div><label class="field-label">Jumlah (Rp)</label>
+          <input class="field-input" id="p-jumlah" type="number" placeholder="150000"></div>
+      </div>
+      <button class="btn-primary" id="p-add">Tambah Tagihan</button>
+    </div>
+
+    <div class="card list-card">
+      <div class="list-head">Daftar Pembayaran</div>
+      <div class="lane"></div>
+      ${list.map(d=>`
+        <div class="list-row">
+          <div><div class="row-title">${esc(d.nama_anggota)}</div><div class="row-sub">${d.periode} · ${rupiah(d.jumlah)}</div></div>
+          <button class="badge badge-btn ${d.status==='Lunas'?'badge-go':'badge-warn'}" data-toggle="${d.id}" data-status="${d.status}">${d.status}</button>
+        </div>
+      `).join("") || `<div class="empty">Belum ada data pembayaran.</div>`}
+    </div>
+  `;
+
+  $("#p-add").addEventListener("click", async ()=>{
+    const nama_anggota = $("#p-nama").value.trim();
+    const jumlah = Number($("#p-jumlah").value);
+    if(!nama_anggota || !jumlah) return;
+    await sb.from("pembayaran").insert({ nama_anggota, periode: $("#p-periode").value, jumlah, status: "Belum Lunas" });
+    renderPembayaran();
+  });
+  $$("[data-toggle]").forEach(b=>b.addEventListener("click", async ()=>{
+    const statusBaru = b.dataset.status === "Lunas" ? "Belum Lunas" : "Lunas";
+    await sb.from("pembayaran").update({
+      status: statusBaru,
+      tanggal_bayar: statusBaru === "Lunas" ? new Date().toISOString().slice(0,10) : null
+    }).eq("id", b.dataset.toggle);
+    renderPembayaran();
+  }));
+}
+
+/* =========================================================
+   TAB: KAS AURA
+========================================================= */
+async function renderKas(){
+  $("#content").innerHTML = `<p class="loading-line">Memuat...</p>`;
+  const { data, error } = await sb.from("kas_transaksi").select("*").order("tanggal", { ascending:false });
+  if(error){ $("#content").innerHTML = `<div class="card empty">Gagal memuat kas: ${esc(error.message)}</div>`; return; }
+  const list = data || [];
+  const masuk = list.filter(d=>d.tipe==="Masuk").reduce((a,b)=>a+Number(b.jumlah),0);
+  const keluar = list.filter(d=>d.tipe==="Keluar").reduce((a,b)=>a+Number(b.jumlah),0);
+
+  $("#content").innerHTML = `
+    <span class="eyebrow">Keuangan</span>
+    <h2 class="page-title font-display">Kas Aura</h2>
+
+    <div class="grid grid-3" style="margin-bottom:24px;">
+      <div class="card stat-card ring" style="border-color:rgba(109,94,245,.3);">
+        <div class="stat-label">Saldo Saat Ini</div><div class="stat-value">${rupiah(masuk-keluar)}</div></div>
+      <div class="card stat-card"><div class="stat-label">Total Masuk</div><div class="stat-value" style="color:var(--go);">${rupiah(masuk)}</div></div>
+      <div class="card stat-card"><div class="stat-label">Total Keluar</div><div class="stat-value" style="color:var(--pulse);">${rupiah(keluar)}</div></div>
+    </div>
+
+    <div class="card form-card">
+      <div class="form-row" style="margin-bottom:14px;">
+        <div><label class="field-label">Keterangan</label>
+          <input class="field-input" id="k-ket" placeholder="Iuran bulanan / sewa lapangan"></div>
+        <div><label class="field-label">Tanggal</label>
+          <input class="field-input" id="k-tanggal" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div><label class="field-label">Jumlah (Rp)</label>
+          <input class="field-input" id="k-jumlah" type="number"></div>
+        <div><label class="field-label">Tipe</label>
+          <select class="field-input" id="k-tipe"><option>Masuk</option><option>Keluar</option></select></div>
+      </div>
+      <button class="btn-primary" id="k-add">Catat</button>
+    </div>
+
+    <div class="card list-card">
+      <div class="list-head">Riwayat Transaksi</div>
+      <div class="lane"></div>
+      ${list.map(d=>`
+        <div class="list-row">
+          <div><div class="row-title">${esc(d.keterangan)}</div><div class="row-sub">${d.tanggal}</div></div>
+          <span class="mono" style="font-weight:600;color:${d.tipe==='Masuk'?'var(--go)':'var(--pulse)'};">${d.tipe==='Masuk'?'+':'-'}${rupiah(d.jumlah)}</span>
+        </div>
+      `).join("") || `<div class="empty">Belum ada transaksi kas.</div>`}
+    </div>
+  `;
+
+  $("#k-add").addEventListener("click", async ()=>{
+    const keterangan = $("#k-ket").value.trim();
+    const jumlah = Number($("#k-jumlah").value);
+    if(!keterangan || !jumlah) return;
+    await sb.from("kas_transaksi").insert({ keterangan, tanggal: $("#k-tanggal").value, jumlah, tipe: $("#k-tipe").value });
+    renderKas();
+  });
+}
+
+/* =========================================================
+   TAB: SKOR LIVE (realtime lintas device via Supabase Realtime)
+========================================================= */
+async function renderSkor(){
+  $("#content").innerHTML = `<p class="loading-line">Memuat...</p>`;
+  const { data, error } = await sb.from("pertandingan").select("*").order("ronde").order("urutan");
+  if(error){ $("#content").innerHTML = `<div class="card empty">Gagal memuat pertandingan: ${esc(error.message)}</div>`; return; }
+  const list = data || [];
+
+  $("#content").innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+      <div><span class="eyebrow">Realtime</span><h2 class="page-title font-display" style="margin-bottom:0;">Skor Pertandingan</h2></div>
+      <span class="live-dot"><span class="d"></span>Live</span>
+    </div>
+    <div class="grid grid-2">
+      ${list.map(m=>`
+        <div class="card score-card">
+          <div class="score-top">
+            <span class="mono" style="font-size:11px;color:var(--mist);text-transform:uppercase;">${esc(m.ronde)}</span>
+            <span class="badge ${m.status==='Selesai'?'badge-go':m.status==='Berlangsung'?'badge-pulse':'badge-mist'}">${m.status}</span>
+          </div>
+          <div class="score-row">
+            <span class="row-title" style="flex:1;">${esc(m.tim_a)}</span>
+            <input class="score-input" type="number" min="0" value="${m.skor_a}" data-score="${m.id}" data-side="a">
+          </div>
+          <div class="score-row" style="margin-bottom:16px;">
+            <span class="row-title" style="flex:1;">${esc(m.tim_b)}</span>
+            <input class="score-input" type="number" min="0" value="${m.skor_b}" data-score="${m.id}" data-side="b">
+          </div>
+          <div class="lane" style="margin-bottom:14px;"></div>
+          <div class="status-btns">
+            ${["Belum Mulai","Berlangsung","Selesai"].map(s=>`
+              <button class="status-btn ${m.status===s?'active':''}" data-status="${m.id}" data-value="${s}">${s}</button>
+            `).join("")}
+          </div>
+        </div>
+      `).join("") || `<div class="card empty">Belum ada pertandingan.</div>`}
+    </div>
+  `;
+
+  $$("[data-score]").forEach(inp=>{
+    let t;
+    inp.addEventListener("input", ()=>{
+      clearTimeout(t);
+      t = setTimeout(async ()=>{
+        const field = inp.dataset.side === "a" ? "skor_a" : "skor_b";
+        await sb.from("pertandingan").update({ [field]: Number(inp.value) }).eq("id", inp.dataset.score);
+      }, 400);
+    });
+  });
+  $$("[data-status]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    await sb.from("pertandingan").update({ status: btn.dataset.value }).eq("id", btn.dataset.status);
+    renderSkor();
+  }));
+
+  if(skorChannel) sb.removeChannel(skorChannel);
+  skorChannel = sb.channel("skor-live")
+    .on("postgres_changes", { event:"*", schema:"public", table:"pertandingan" }, ()=>{
+      if(currentTab === "skor") renderSkor();
+    })
+    .subscribe();
+}
+
+/* =========================================================
+   TAB: BAGAN PERTANDINGAN
+========================================================= */
+const URUTAN_RONDE = ["Penyisihan","32 Besar","16 Besar","Perempat Final","Semifinal","Final"];
+
+async function renderBagan(){
+  $("#content").innerHTML = `<p class="loading-line">Memuat...</p>`;
+  const { data, error } = await sb.from("pertandingan").select("*").order("urutan");
+  if(error){ $("#content").innerHTML = `<div class="card empty">Gagal memuat bagan: ${esc(error.message)}</div>`; return; }
+  const list = data || [];
+  const rondeUnik = [...new Set(list.map(d=>d.ronde))].sort((a,b)=>{
+    const ia = URUTAN_RONDE.indexOf(a), ib = URUTAN_RONDE.indexOf(b);
+    if(ia===-1 && ib===-1) return a.localeCompare(b);
+    if(ia===-1) return 1; if(ib===-1) return -1;
+    return ia-ib;
+  });
+
+  $("#content").innerHTML = `
+    <span class="eyebrow">Turnamen</span>
+    <h2 class="page-title font-display">Bagan Pertandingan</h2>
+    ${list.length===0 ? `<div class="card empty">Belum ada data bagan.</div>` : `
+    <div class="bagan-wrap">
+      <div style="display:flex;gap:40px;min-width:max-content;">
+        ${rondeUnik.map((ronde, i)=>{
+          const matches = list.filter(d=>d.ronde===ronde).sort((a,b)=>(a.urutan||0)-(b.urutan||0));
+          const gap = 16 * Math.pow(2,i);
+          return `<div class="bagan-round">
+            <div class="bagan-round-title">${esc(ronde)}</div>
+            <div style="display:flex;flex-direction:column;justify-content:space-around;gap:${gap}px;flex:1;">
+              ${matches.map(m=>{
+                const menang = m.status==="Selesai" ? (m.skor_a===m.skor_b ? null : (m.skor_a>m.skor_b?"a":"b")) : null;
+                return `<div class="bagan-match">
+                  <div class="bagan-team ${menang==='a'?'bagan-win':''}"><span>${esc(m.tim_a)}</span><span class="mono">${m.skor_a}</span></div>
+                  <div class="lane"></div>
+                  <div class="bagan-team ${menang==='b'?'bagan-win':''}"><span>${esc(m.tim_b)}</span><span class="mono">${m.skor_b}</span></div>
+                </div>`;
+              }).join("")}
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`}
+  `;
+
+  if(skorChannel) sb.removeChannel(skorChannel);
+  skorChannel = sb.channel("bagan-live")
+    .on("postgres_changes", { event:"*", schema:"public", table:"pertandingan" }, ()=>{
+      if(currentTab === "bagan") renderBagan();
+    })
+    .subscribe();
+}
+
+/* =========================================================
+   TAB: DOKUMENTASI
+========================================================= */
+async function renderDokumentasi(){
+  $("#content").innerHTML = `<p class="loading-line">Memuat...</p>`;
+  const { data, error } = await sb.from("dokumentasi").select("*").order("created_at", { ascending:false });
+  if(error){ $("#content").innerHTML = `<div class="card empty">Gagal memuat dokumentasi: ${esc(error.message)}</div>`; return; }
+  const list = data || [];
+  const kategoriUnik = [...new Set(list.map(d=>d.kategori||"Umum"))];
+
+  $("#content").innerHTML = `
+    <span class="eyebrow">Arsip</span>
+    <h2 class="page-title font-display">Link Dokumentasi</h2>
+
+    <div class="card form-card">
+      <div class="form-row" style="margin-bottom:14px;">
+        <div><label class="field-label">Judul</label><input class="field-input" id="d-judul" placeholder="Foto Latihan 12 Juli"></div>
+        <div style="grid-column:span 2;"><label class="field-label">Link</label><input class="field-input" id="d-url" placeholder="https://drive.google.com/..."></div>
+        <div><label class="field-label">Kategori</label><input class="field-input" id="d-kategori" placeholder="Umum" value="Umum"></div>
+      </div>
+      <button class="btn-primary" id="d-add">Simpan</button>
+    </div>
+
+    ${list.length===0 ? `<div class="card empty">Belum ada link dokumentasi.</div>` :
+      kategoriUnik.map(kat=>`
+        <div style="margin-bottom:22px;">
+          <p class="mono" style="font-size:11px;color:var(--mist);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">${esc(kat)}</p>
+          <div class="grid grid-3">
+            ${list.filter(d=>(d.kategori||"Umum")===kat).map(d=>`
+              <a class="card doc-card" href="${esc(d.url)}" target="_blank" rel="noreferrer">
+                <div class="row-title">${esc(d.judul)}</div>
+                <div class="doc-url">${esc(d.url)}</div>
+              </a>
+            `).join("")}
+          </div>
+        </div>
+      `).join("")}
+  `;
+
+  $("#d-add").addEventListener("click", async ()=>{
+    const judul = $("#d-judul").value.trim();
+    const url = $("#d-url").value.trim();
+    if(!judul || !url) return;
+    await sb.from("dokumentasi").insert({ judul, url, kategori: $("#d-kategori").value.trim() || "Umum" });
+    renderDokumentasi();
+  });
+}
+
+/* ---------- start ---------- */
+(async function start(){
+  const { data: { session } } = await sb.auth.getSession();
+  currentUserObj = session ? session.user : null;
+  boot();
+})();
+</script>
+</body>
+</html>
