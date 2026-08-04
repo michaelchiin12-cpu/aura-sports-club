@@ -1,0 +1,28 @@
+/* =========================================================
+   ANIMASI
+========================================================= */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animasi-masuk {
+  animation: fadeIn 0.35s ease-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.animasi-live .dot {
+  animation: pulseDot 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+.animasi-loading {
+  background: linear-gradient(90deg, #151310 0px, #2e2a22 40px, #151310 80px);
+  background-size: 600px 100%;
+  animation: shimmer 1.6s infinite linear;
+}
